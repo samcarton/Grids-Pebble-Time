@@ -1,0 +1,83 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "Sam Carton",
+    "longName": "Grids",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/9.png",
+                "name": "IMAGE_9",
+                "type": "png"
+            },
+            {
+                "file": "images/8.png",
+                "name": "IMAGE_8",
+                "type": "png"
+            },
+            {
+                "file": "images/7.png",
+                "name": "IMAGE_7",
+                "type": "png"
+            },
+            {
+                "file": "images/6.png",
+                "name": "IMAGE_6",
+                "type": "png"
+            },
+            {
+                "file": "images/5.png",
+                "name": "IMAGE_5",
+                "type": "png"
+            },
+            {
+                "file": "images/4.png",
+                "name": "IMAGE_4",
+                "type": "png"
+            },
+            {
+                "file": "images/3.png",
+                "name": "IMAGE_3",
+                "type": "png"
+            },
+            {
+                "file": "images/2.png",
+                "name": "IMAGE_2",
+                "type": "png"
+            },
+            {
+                "file": "images/1.png",
+                "name": "IMAGE_1",
+                "type": "png"
+            },
+            {
+                "file": "images/0.png",
+                "name": "IMAGE_0",
+                "type": "png"
+            },
+            {
+                "file": "images/batterybar.png",
+                "name": "IMAGE_BATTERY_BAR",
+                "type": "png"
+            },
+            {
+                "file": "images/BGGrid.png",
+                "name": "IMAGE_BACKGROUND_GRID",
+                "type": "png"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Grids",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "6f06d01f-9aeb-4414-9cb6-f2b41af8f2b2",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
