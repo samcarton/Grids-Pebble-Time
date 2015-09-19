@@ -156,12 +156,22 @@ static void update_minutes(unsigned short minutes){
   
   //ones
   unsigned short minuteOnes = minutes%10;
-  load_bitmap(minuteOnes,&minutes_ones_layer, &minutes_ones, GColorTiffanyBlue, minutes_ones_x, minutes_ones_y,true) ;
-  
+  load_bitmap(minuteOnes,&minutes_ones_layer, &minutes_ones, GColorTiffanyBlue, minutes_ones_x, minutes_ones_y,true) ;  
 }
 
 static void update_seconds(unsigned short seconds)  {
-  return;
+  //tens
+  if(seconds<10){    
+    load_bitmap(0,&seconds_tens_layer, &seconds_tens, GColorChromeYellow, seconds_tens_x, seconds_tens_y,true) ;
+  }
+  else{
+    unsigned short secondsTens = seconds/10;    
+    load_bitmap(secondsTens,&seconds_tens_layer, &seconds_tens, GColorChromeYellow,  seconds_tens_x, seconds_tens_y,true);
+  }
+  
+  //ones
+  unsigned short secondsOnes = seconds%10;
+  load_bitmap(secondsOnes,&seconds_ones_layer, &seconds_ones, GColorChromeYellow, seconds_ones_x, seconds_ones_y,true) ;
 }
 
 static unsigned short get_display_hour(unsigned short hour) {
@@ -195,6 +205,8 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed){
   int seconds = tick_time->tm_sec;
 #endif
   
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "tick handler");
+  
   update_hours(hours);
   update_minutes(minutes);
   update_seconds(seconds);
@@ -225,8 +237,9 @@ static void force_tick(){
 }
 
 static void window_load(Window *window) {
-  load_bitmap(10, &background_layer, &background_grid, GColorBlack, 0,0,false);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "load");  
   window_layer = window_get_root_layer(window);  
+  load_bitmap(10, &background_layer, &background_grid, GColorBlack, 0,0,false);
   force_tick();
 }
 
@@ -243,6 +256,7 @@ static void window_unload(Window *window) {
 
 
 void handle_init(void) {  
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "start init");
   is24hrFormat = clock_is_24h_style();
   
   _window = window_create();
@@ -253,7 +267,7 @@ void handle_init(void) {
   
   tick_timer_service_subscribe(MONTH_UNIT | DAY_UNIT | HOUR_UNIT | MINUTE_UNIT | SECOND_UNIT, 
                                handle_tick); 
-  
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "end init");
 }
 
 void handle_deinit(void) {  
@@ -261,6 +275,7 @@ void handle_deinit(void) {
 }
 
 int main(void) {  
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "main");
   handle_init();
   app_event_loop();
   handle_deinit();
