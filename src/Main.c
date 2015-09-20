@@ -339,9 +339,7 @@ void handle_init(void) {
                                handle_tick); 
   
   battery_state_service_subscribe(battery_handler);
-  battery_handler(battery_state_service_peek());
-  
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "end init");
+  battery_handler(battery_state_service_peek());  
 }
 
 void handle_deinit(void) {  
