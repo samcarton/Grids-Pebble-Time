@@ -56,15 +56,31 @@ static GBitmap* background_grid = NULL;
 
 // battery bitmaps
 static BitmapLayer* battery_100_layer = NULL;
-static GBitmap* background_100 = NULL;
+static GBitmap* battery_100 = NULL;
 static BitmapLayer* battery_80_layer = NULL;
-static GBitmap* background_80 = NULL;
+static GBitmap* battery_80 = NULL;
 static BitmapLayer* battery_60_layer = NULL;
-static GBitmap* background_60 = NULL;
+static GBitmap* battery_60 = NULL;
 static BitmapLayer* battery_40_layer = NULL;
-static GBitmap* background_40 = NULL;
+static GBitmap* battery_40 = NULL;
 static BitmapLayer* battery_20_layer = NULL;
-static GBitmap* background_20 = NULL;
+static GBitmap* battery_20 = NULL;
+
+typedef struct charge_layer_struct {
+  int minimum_charge; 
+  Layer* layer; 
+  bool visible;} charge_layer;
+
+static charge_layer charge_layers[5] = 
+{
+  {.minimum_charge = 90, .layer = NULL, .visible = false},
+  {.minimum_charge = 70, .layer = NULL, .visible = false},
+  {.minimum_charge = 50, .layer = NULL, .visible = false},
+  {.minimum_charge = 30, .layer = NULL, .visible = false},
+  {.minimum_charge = 10, .layer = NULL, .visible = false}
+};
+
+const int CHARGE_LAYER_SIZE = 5;
 
 // battery coords
 const int battery_x = 69;
@@ -205,11 +221,16 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed){
   int seconds = tick_time->tm_sec;
 #endif
   
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "tick handler");
-  
-  update_hours(hours);
-  update_minutes(minutes);
-  update_seconds(seconds);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "tick handler");
+  if((HOUR_UNIT & units_changed )> 0){
+    update_hours(hours);
+  }
+  if((MINUTE_UNIT & units_changed )> 0){
+    update_minutes(minutes);
+  }
+  if((SECOND_UNIT & units_changed )> 0){
+    update_seconds(seconds);
+  }
 
 #ifdef DEBUGTIME
   ++debugHours;
@@ -228,18 +249,66 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed){
   
 }
 
-
-
 static void force_tick(){
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
-  handle_tick(tick_time, MINUTE_UNIT);
+  handle_tick(tick_time, HOUR_UNIT | MINUTE_UNIT | SECOND_UNIT);
+}
+
+static void battery_handler(BatteryChargeState charge_state){
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "battery charge %d", charge_state.charge_percent);
+  int i;
+  for(i = 0; i < CHARGE_LAYER_SIZE; i++)
+  {
+    if(charge_state.charge_percent >= charge_layers[i].minimum_charge){
+      // if it is not visible already, make it visible
+      if(charge_layers[i].visible == false){
+        layer_set_hidden(charge_layers[i].layer, false);
+        charge_layers[i].visible = true;
+      }      
+    }
+    else{
+      // if it is visible already, hide it
+      if(charge_layers[i].visible){
+        layer_set_hidden(charge_layers[i].layer, true);
+        charge_layers[i].visible = false;
+      }
+    }    
+  }
+}
+
+static void load_battery_bars()  {
+  load_bitmap(11, &battery_100_layer, &battery_100, GColorBlack, battery_x,battery_100_y,false);
+  load_bitmap(11, &battery_80_layer, &battery_80, GColorBlack, battery_x,battery_80_y,false);
+  load_bitmap(11, &battery_60_layer, &battery_60, GColorBlack, battery_x,battery_60_y,false);
+  load_bitmap(11, &battery_40_layer, &battery_40, GColorBlack, battery_x,battery_40_y,false);
+  load_bitmap(11, &battery_20_layer, &battery_20, GColorBlack, battery_x,battery_20_y,false);
+  charge_layers[0].layer = bitmap_layer_get_layer(battery_100_layer);
+  charge_layers[1].layer = bitmap_layer_get_layer(battery_80_layer);
+  charge_layers[2].layer = bitmap_layer_get_layer(battery_60_layer);
+  charge_layers[3].layer = bitmap_layer_get_layer(battery_40_layer);
+  charge_layers[4].layer = bitmap_layer_get_layer(battery_20_layer);
+  int i;
+  for(i = 0; i < CHARGE_LAYER_SIZE; i++)
+  {
+    layer_set_hidden(charge_layers[i].layer, true);
+    charge_layers[i].visible = false;
+  }
+}
+
+static void unload_battery_bars(){
+  unload_bitmap(&battery_100_layer,&battery_100);
+  unload_bitmap(&battery_80_layer,&battery_80);
+  unload_bitmap(&battery_60_layer,&battery_60);
+  unload_bitmap(&battery_40_layer,&battery_40);
+  unload_bitmap(&battery_20_layer,&battery_20);
 }
 
 static void window_load(Window *window) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "load");  
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "load");  
   window_layer = window_get_root_layer(window);  
   load_bitmap(10, &background_layer, &background_grid, GColorBlack, 0,0,false);
+  load_battery_bars();
   force_tick();
 }
 
@@ -251,12 +320,13 @@ static void window_unload(Window *window) {
   unload_bitmap(&minutes_ones_layer, &minutes_ones);
   unload_bitmap(&seconds_tens_layer, &seconds_tens);
   unload_bitmap(&seconds_ones_layer, &seconds_ones);
-  unload_bitmap(&background_layer, &background_grid);
+  unload_battery_bars();
+  unload_bitmap(&background_layer, &background_grid);  
 }
 
 
 void handle_init(void) {  
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "start init");
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "start init");
   is24hrFormat = clock_is_24h_style();
   
   _window = window_create();
@@ -267,15 +337,21 @@ void handle_init(void) {
   
   tick_timer_service_subscribe(MONTH_UNIT | DAY_UNIT | HOUR_UNIT | MINUTE_UNIT | SECOND_UNIT, 
                                handle_tick); 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "end init");
+  
+  battery_state_service_subscribe(battery_handler);
+  battery_handler(battery_state_service_peek());
+  
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "end init");
 }
 
 void handle_deinit(void) {  
+  battery_state_service_unsubscribe();
+  tick_timer_service_unsubscribe();
   window_destroy(_window);
 }
 
 int main(void) {  
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "main");
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "main");
   handle_init();
   app_event_loop();
   handle_deinit();
