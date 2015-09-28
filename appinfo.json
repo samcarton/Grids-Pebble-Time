@@ -9,6 +9,12 @@
     "resources": {
         "media": [
             {
+                "file": "images/MenuIcon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/9.png",
                 "name": "IMAGE_9",
                 "type": "png"
@@ -76,7 +82,7 @@
         "basalt"
     ],
     "uuid": "6f06d01f-9aeb-4414-9cb6-f2b41af8f2b2",
-    "versionLabel": "1.0",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": true
     }
